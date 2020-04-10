@@ -1,6 +1,14 @@
-gamma_move()
-gamma_golden_move()
+gamma_move() - FINISH HIM
+gamma_golden_move() - make it compatible with gamma_move()
 gamma_board()
+
+*mucho importanto*
+think about changing the available_fields system to the adjacent and the others
+
+*not so mucho importanto*
+create a new module for array functions
+
+================================================================================
 
 debug it all
 
