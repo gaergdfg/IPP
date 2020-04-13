@@ -1,12 +1,12 @@
-gamma_move() - FINISH HIM
-gamma_golden_move() - make it compatible with gamma_move()
-gamma_board()
+MAKE THE available_fields COUNTING METHOD
 
 *mucho importanto*
-think about changing the available_fields system to the adjacent and the others
+1.	we're looking at get_neighbour_count of adjacent fields to the one we changed
+	if it's >1 we don't change the ones that are adjacent, else we're increasing
+	the ones that require a new area to be claimed
 
 *not so mucho importanto*
-create a new module for array functions
+1. add field_manager() to gamma_move() ? 
 
 ================================================================================
 
