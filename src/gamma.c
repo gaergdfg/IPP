@@ -42,8 +42,8 @@ typedef struct gamma {
 	uint32_t player_count;
 	uint32_t max_player_areas;
 
-	uint32_t* field; // plansza
-	uint64_t* leader; // find&union lider tego pola
+	uint32_t** field; // plansza
+	uint64_t** leader; // find&union lider tego pola
 	player_t** players; // tablica z danymi graczy
 } gamma_t;
 
@@ -147,24 +147,24 @@ gamma_t* gamma_new(
 	gamma->max_player_areas = areas;
 
 	// do I have to initiate it with zeros?
-	gamma->field = *allocate_2d_array_uint32(height, width);
+	gamma->field = allocate_2d_array_uint32(height, width);
 	if (!gamma->field) {
 		free(gamma);
 		return NULL;
 	}
 
 	// do I have to initiate it with zeros?
-	gamma->leader = *allocate_2d_array_uint64(height, width);
+	gamma->leader = allocate_2d_array_uint64(height, width);
 	if (!gamma->leader) {
-		free_2d_array(gamma->field, gamma->player_count);
+		free_2d_array_uint32(gamma->field);
 		free(gamma);
 		return NULL;
 	}
 
 	gamma->players = malloc(players * sizeof(player_t));
 	if (!gamma->players) {
-		free_2d_array(gamma->field, gamma->player_count);
-		free_2d_array(gamma->leader, gamma->player_count);
+		free_2d_array_uint32(gamma->field);
+		free_2d_array_uint64(gamma->leader);
 		free(gamma);
 		return NULL;
 	}
@@ -177,8 +177,8 @@ gamma_t* gamma_new(
 			}
 			free(gamma->players);
 
-			free_2d_array(gamma->field, gamma->player_count);
-			free_2d_array(gamma->leader, gamma->player_count);
+			free_2d_array_uint32(gamma->field);
+			free_2d_array_uint64(gamma->leader);
 			free(gamma);
 			return NULL;
 		}
@@ -193,8 +193,8 @@ void gamma_delete(gamma_t *g) {
 		return;
 	}
 	
-	free_2d_array(g->field, g->player_count);
-	free_2d_array(g->leader, g->player_count);
+	free_2d_array_uint32(g->field);
+	free_2d_array_uint64(g->leader);
 
 	for (uint32_t i = 0; i < g->player_count; i++) {
 		free(g->players[i]);
@@ -430,11 +430,11 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
 	
 	for (uint32_t i = 0; i < g->player_count; i++) {
 		if (i != player - 1 && g->players[i]->taken_fields > 0) {
-			return false;
+			return true;
 		}
 	}
 
-	return true;
+	return false;
 }
 
 

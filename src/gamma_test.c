@@ -52,6 +52,7 @@ int main() {
 	assert(gamma_busy_fields(g, 2) == 0);
 	assert(gamma_free_fields(g, 1) == 99);
 	assert(gamma_free_fields(g, 2) == 99);
+	printf("%d\n", gamma_golden_possible(g, 1) ? 1 : 0);
 	assert(!gamma_golden_possible(g, 1));
 	assert(gamma_move(g, 2, 3, 1));
 	assert(gamma_busy_fields(g, 1) == 1);
