@@ -1,4 +1,4 @@
-figure out how to compile the project
+add uint64_t casts when allocating memory for 2d array - fix it btw
 
 debug it all
 

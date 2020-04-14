@@ -147,25 +147,39 @@ gamma_t* gamma_new(
 	gamma->max_player_areas = areas;
 
 	// do I have to initiate it with zeros?
-	gamma->field = allocate_2d_array(height, width);
+	gamma->field = *allocate_2d_array_uint32(height, width);
 	if (!gamma->field) {
+		free(gamma);
 		return NULL;
 	}
 
 	// do I have to initiate it with zeros?
-	gamma->leader = allocate_2d_array(height, width);
+	gamma->leader = *allocate_2d_array_uint64(height, width);
 	if (!gamma->leader) {
+		free_2d_array(gamma->field, gamma->player_count);
+		free(gamma);
 		return NULL;
 	}
 
 	gamma->players = malloc(players * sizeof(player_t));
 	if (!gamma->players) {
+		free_2d_array(gamma->field, gamma->player_count);
+		free_2d_array(gamma->leader, gamma->player_count);
+		free(gamma);
 		return NULL;
 	}
 	
-	for (int i = 0; i < players; i++) {
+	for (uint32_t i = 0; i < players; i++) {
 		gamma->players[i] = player_new(height, width);
 		if (!gamma->players[i]) {
+			for (long long j = i - 1; j >= 0; j--) {
+				free(gamma->players[j]);
+			}
+			free(gamma->players);
+
+			free_2d_array(gamma->field, gamma->player_count);
+			free_2d_array(gamma->leader, gamma->player_count);
+			free(gamma);
 			return NULL;
 		}
 	}
@@ -182,7 +196,7 @@ void gamma_delete(gamma_t *g) {
 	free_2d_array(g->field, g->player_count);
 	free_2d_array(g->leader, g->player_count);
 
-	for (int i = 0; i < g->player_count; i++) {
+	for (uint32_t i = 0; i < g->player_count; i++) {
 		free(g->players[i]);
 	}
 	free(g->players);
@@ -243,7 +257,7 @@ bool gamma_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
 
 	// == manage all players available fields ==
 	// managing the field that has been taken
-	for (int i = 0; i < g->player_count; i++) {
+	for (uint32_t i = 0; i < g->player_count; i++) {
 		if (get_neighbour_count(g, i, x, y) > 0) {
 			g->players[i]->available_fields_adjacent--;
 		} else {
@@ -300,7 +314,7 @@ void clear_field(gamma_t *gamma, uint32_t player, uint32_t x, uint32_t y) {
 
 	// == manage available_fields due to removing a players field ==
 	// managing the field that has been cleared
-	for (int i = 0; i < gamma->player_count; i++) {
+	for (uint32_t i = 0; i < gamma->player_count; i++) {
 		if (get_neighbour_count(gamma, i, x, y) > 0) {
 			gamma->players[i]->available_fields_adjacent++;
 		} else {
@@ -366,7 +380,7 @@ bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
 
 	// check if the move was illegal (it created too many areas for any player),
 	// if so, undo the move and return false
-	for (int i = 0; i < g->player_count; i++) {
+	for (uint32_t i = 0; i < g->player_count; i++) {
 		if (g->players[i]->occupied_areas > g->max_player_areas) {
 			g->players[player - 1]->used_golden_move = false;
 			clear_field(g, player, x, y);
@@ -414,7 +428,7 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
 		return false;
 	}
 	
-	for (int i = 0; i < g->player_count; i++) {
+	for (uint32_t i = 0; i < g->player_count; i++) {
 		if (i != player - 1 && g->players[i]->taken_fields > 0) {
 			return false;
 		}
@@ -451,7 +465,7 @@ void add_number_to_string(char **string, uint32_t number, uint64_t *size) {
 
 char* gamma_board(gamma_t *g) {
 	uint64_t bonus_brackets_space = 0;
-	for (int i = 10; i < g->player_count; i++) {
+	for (uint32_t i = 10; i < g->player_count; i++) {
 		bonus_brackets_space += 
 			get_power_of_ten(g->players[i]->taken_fields) + 2;
 	}
@@ -464,8 +478,8 @@ char* gamma_board(gamma_t *g) {
 	}
 
 	uint64_t size = 0;
-	for (int y = 0; y < g->field_height; y++) {
-		for (int x = 0; x < g->field_width; x++) {
+	for (uint32_t y = 0; y < g->field_height; y++) {
+		for (uint32_t x = 0; x < g->field_width; x++) {
 			if (*get_arr_32(g->field, x, y) == 0) {
 				gamma_to_string[size++] = '.';
 			}
