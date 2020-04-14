@@ -5,10 +5,17 @@
 #include "memory_util.h"
 
 
+// axes offset values to iterate through adjecent fields on the field
+// up, right, down, left
+const uint32_t offset_x[4] = {0, 1, 0, -1};
+const uint32_t offset_y[4] = {-1, 0, 1, 0};
+
+
 typedef struct player {
 	bool used_golden_move;
 	uint64_t taken_fields;
-	uint64_t available_fields;
+	uint64_t available_fields_adjacent;
+	uint64_t available_fields_far;
 	uint32_t occupied_areas;
 } player_t;
 
@@ -21,7 +28,8 @@ player_t* player_new(uint64_t height, uint64_t width) {
 
 	player->used_golden_move = false;
 	player->taken_fields = 0;
-	player->available_fields = height * width;
+	player->available_fields_adjacent = 0;
+	player->available_fields_far = height * width;
 	player->occupied_areas = 0;
 
 	return player;
@@ -76,7 +84,7 @@ bool check_field_exists(gamma_t *gamma, uint32_t x, uint32_t y, uint32_t dir) {
 }
 
 
-// self explanatory
+// returns the number of adjacent field that belong to [player]
 uint32_t get_neighbour_count(
 	gamma_t *gamma,
 	uint32_t player,
@@ -85,36 +93,22 @@ uint32_t get_neighbour_count(
 ) {
 	uint32_t neighbour_count = 0;
 
-	if ( // up
-		check_field_exists(gamma, x, y, 0) &&
-		*get_arr_32(gamma->field, x, y - 1) == player
-	) {
-		neighbour_count++;
-	}
-	if ( // right
-		check_field_exists(gamma, x, y, 1) &&
-		*get_arr_32(gamma->field, x + 1, y) == player
-	) {
-		neighbour_count++;
-	}
-	if ( // down
-		check_field_exists(gamma, x, y, 2) &&
-		*get_arr_32(gamma->field, x, y + 1) == player
-	) {
-		neighbour_count++;
-	}
-	if ( // left
-		check_field_exists(gamma, x, y, 3) &&
-		*get_arr_32(gamma->field, x - 1, y) == player
-	) {
-		neighbour_count++;
+	for (int i = 0; i < 4; i++) {
+		uint32_t new_x = x + offset_x[i];
+		uint32_t new_y = y + offset_y[i];
+		if (
+			check_field_exists(gamma, x, y, i) &&
+			*get_arr_32(gamma->field, new_x, new_y) == player
+		) {
+			neighbour_count++;
+		}
 	}
 
 	return neighbour_count;
 }
 
 
-// self explanatory
+// finds the leader of the field
 uint64_t find_leader(gamma_t *gamma, uint32_t x, uint32_t y) {
 	uint64_t curr_leader = *get_arr_64(gamma->leader, x, y);
 	uint64_t array_index = get_array_index(x, y);
@@ -225,46 +219,50 @@ bool gamma_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
 		return false;
 	}
 
-	// sets fields owner
+	// == sets [field]'s owner ==
 	*get_arr_32(g->field, x, y) = player;
 	g->players[player - 1]->taken_fields++;
 
-	// connects adjacent fields of the player into one area
+	// == connects adjacent fields of the player into one area ==
 	*get_arr_64(g->leader, x, y) = get_array_index(x, y);
 	g->players[player - 1]->occupied_areas++;
-	if (get_neighbour_count(g, player, x, y) > 0) {
-		if ( // up
-			check_field_exists(g, x, y, 0) &&
-			*get_arr_32(g->field, x, y - 1) == player
-		) {
-			manage_leader(g, x, y, x, y - 1);
-		}
 
-		if ( // right
-			check_field_exists(g, x, y, 1) &&
-			*get_arr_32(g->field, x + 1, y) == player
+	for (int i = 0; i < 4; i++) {
+		uint32_t new_x = x + offset_x[i];
+		uint32_t new_y = y + offset_y[i];
+		if (
+			check_field_exists(g, x, y, i) &&
+			*get_arr_32(g->field, new_x, new_y) == player
 		) {
-			manage_leader(g, x, y, x + 1, y);
-		}
-
-		if ( // down
-			check_field_exists(g, x, y, 2) &&
-			*get_arr_32(g->field, x, y + 1) == player
-		) {
-			manage_leader(g, x, y, x, y + 1);
-		}
-
-		if ( // left
-			check_field_exists(g, x, y, 3) &&
-			*get_arr_32(g->field, x - 1, y) == player
-		) {
-			manage_leader(g, x, y, x - 1, y);
+			manage_leader(g, x, y, new_x, new_y);
 		}
 	}
+
 	g->players[player - 1]->occupied_areas -=
 		get_neighbour_count(g, player, x, y);
 
-	// manage all players available fields
+	// == manage all players available fields ==
+	// managing the field that has been taken
+	for (int i = 0; i < g->player_count; i++) {
+		if (get_neighbour_count(g, i, x, y) > 0) {
+			g->players[i]->available_fields_adjacent--;
+		} else {
+			g->players[i]->available_fields_far--;
+		}
+	}
+
+	// managing adjacent fields
+	for (int i = 0; i < 4; i++) {
+		uint32_t new_x = x + offset_x[i];
+		uint32_t new_y = y + offset_y[i];
+		if (
+			check_field_exists(g, x, y, i) &&
+			get_neighbour_count(g, player, new_x, new_y) == 1
+		) {
+			g->players[player - 1]->available_fields_adjacent++;
+			g->players[player - 1]->available_fields_far--;
+		}
+	}
 
 	return true;
 }
@@ -279,106 +277,72 @@ void set_leader(
 	uint32_t y
 ) {
 	*get_arr_64(gamma->leader, x, y) = new_leader;
-
-	if ( // up
-		check_field_exists(gamma, x, y, 0) &&
-		*get_arr_32(gamma->field, x, y - 1) == player
-	) {
-		set_leader(gamma, player, new_leader, x, y - 1);
-	}
-
-	if ( // right
-		check_field_exists(gamma, x, y, 1) &&
-		*get_arr_32(gamma->field, x + 1, y) == player
-	) {
-		set_leader(gamma, player, new_leader, x + 1, y);
-	}
-
-	if ( // down
-		check_field_exists(gamma, x, y, 2) &&
-		*get_arr_32(gamma->field, x, y + 1) == player
-	) {
-		set_leader(gamma, player, new_leader, x, y + 1);
-	}
-
-	if ( // left
-		check_field_exists(gamma, x, y, 3) &&
-		*get_arr_32(gamma->field, x - 1, y) == player
-	) {
-		set_leader(gamma, player, new_leader, x - 1, y);
-	}
-}
-
-
-// utility function to not repeat the same code many times in clear_field()
-void clear_field_proccess_manager(
-	gamma_t *gamma,
-	uint32_t player,
-	uint32_t new_x,
-	uint32_t new_y,
-	uint64_t *last_leader
-) {
-	if (
-		check_field_exists(gamma, new_x, new_y, 0) &&
-		*get_arr_32(gamma->field, new_x, new_y) == player &&
-		*get_arr_64(gamma->leader, new_x, new_y) != *last_leader
-	) {
-		set_leader(
-			gamma,
-			player,
-			get_array_index(new_x, new_y),
-			new_x,
-			new_y
-		);
-		*last_leader = *get_arr_64(gamma->leader, new_x, new_y);
-		gamma->players[player - 1]->occupied_areas++;
+	
+	for (int i = 0; i < 4; i++) {
+		uint32_t new_x = x + offset_x[i];
+		uint32_t new_y = y + offset_y[i];
+		if (
+			check_field_exists(gamma, x, y, i) &&
+			*get_arr_32(gamma->field, new_x, new_y) == player
+		) {
+			set_leader(gamma, player, new_leader, new_x, new_y);
+		}
 	}
 }
 
 
 // unlinks field[y][x] from [player]
 void clear_field(gamma_t *gamma, uint32_t player, uint32_t x, uint32_t y) {
-	// manage available_fields due to removing a players field
-
-	// resets field owner
+	// == resets field owner ==
 	*get_arr_32(gamma->field, x, y) = 0;
 	gamma->players[player - 1]->taken_fields--;
 	gamma->players[player - 1]->occupied_areas--;
 
-	// fixes the leader of adjacent fields if they belong to the player
+	// == manage available_fields due to removing a players field ==
+	// managing the field that has been cleared
+	for (int i = 0; i < gamma->player_count; i++) {
+		if (get_neighbour_count(gamma, i, x, y) > 0) {
+			gamma->players[i]->available_fields_adjacent++;
+		} else {
+			gamma->players[i]->available_fields_far++;
+		}
+	}
+
+	// managing adjacent fields
+	for (int i = 0; i < 4; i++) {
+		uint32_t new_x = x + offset_x[i];
+		uint32_t new_y = y + offset_y[i];
+		if (
+			check_field_exists(gamma, x, y, i) &&
+			get_neighbour_count(gamma, player, new_x, new_y) == 0
+		) {
+			gamma->players[player - 1]->available_fields_adjacent--;
+			gamma->players[player - 1]->available_fields_far++;
+		}
+	}
+
+	// == fixes the leader of adjacent fields if they belong to [player] ==
 	uint64_t last_leader = 0;
 
-	clear_field_proccess_manager( // up
-		gamma,
-		player,
-		x,
-		y - 1,
-		&last_leader
-	);
-
-	clear_field_proccess_manager( // right
-		gamma,
-		player,
-		x + 1,
-		y,
-		&last_leader
-	);
-
-	clear_field_proccess_manager( // down
-		gamma,
-		player,
-		x,
-		y + 1,
-		&last_leader
-	);
-
-	clear_field_proccess_manager( // left
-		gamma,
-		player,
-		x - 1,
-		y,
-		&last_leader
-	);
+	for (int i = 0; i < 4; i++) {
+		uint32_t new_x = x + offset_x[i];
+		uint32_t new_y = y + offset_y[i];
+		if (
+			check_field_exists(gamma, new_x, new_y, i) &&
+			*get_arr_32(gamma->field, new_x, new_y) == player &&
+			*get_arr_64(gamma->leader, new_x, new_y) != last_leader
+		) {
+			set_leader(
+				gamma,
+				player,
+				get_array_index(new_x, new_y),
+				new_x,
+				new_y
+			);
+			last_leader = *get_arr_64(gamma->leader, new_x, new_y);
+			gamma->players[player - 1]->occupied_areas++;
+		}
+	}
 }
 
 
@@ -400,7 +364,8 @@ bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
 	clear_field(g, field_owner, x, y);
 	gamma_move(g, player, x, y);
 
-	// check if the move was illegal, if so, undo the move and return false
+	// check if the move was illegal (it created too many areas for any player),
+	// if so, undo the move and return false
 	for (int i = 0; i < g->player_count; i++) {
 		if (g->players[i]->occupied_areas > g->max_player_areas) {
 			g->players[player - 1]->used_golden_move = false;
@@ -430,7 +395,13 @@ uint64_t gamma_free_fields(gamma_t *g, uint32_t player) {
 		return 0;
 	}
 
-	return g->players[player - 1]->available_fields;
+	uint64_t adjacent = g->players[player - 1]->available_fields_adjacent;
+	uint64_t far = 0;
+	if (g->players[player - 1]->occupied_areas < g->max_player_areas) {
+		far = g->players[player - 1]->available_fields_far;
+	}
+
+	return adjacent + far;
 }
 
 
@@ -465,7 +436,8 @@ uint64_t get_power_of_ten(uint32_t number) {
 }
 
 
-// adds digits of [number] to [string] at positions ([size], [size] + get_power_of_ten([number] - 1))
+// adds digits of [number] to [string] at positions
+// ([size], [size] + get_power_of_ten([number] - 1))
 void add_number_to_string(char **string, uint32_t number, uint64_t *size) {
 	uint64_t position = *size + get_power_of_ten(number) - 1;
 
