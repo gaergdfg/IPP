@@ -4,6 +4,10 @@
 #include "array_util.h"
 #include "memory_util.h"
 
+/* DEBUGGING */
+// #include <stdio.h>
+/* DEBUGGING */
+
 
 // axes offset values to iterate through adjecent fields on the field
 // up, right, down, left
@@ -36,7 +40,7 @@ player_t* player_new(uint64_t height, uint64_t width) {
 }
 
 
-typedef struct gamma {
+typedef struct g {
 	uint32_t field_width;
 	uint32_t field_height;
 	uint32_t player_count;
@@ -48,36 +52,66 @@ typedef struct gamma {
 } gamma_t;
 
 
+/* DEBUGGING */
+// void gamma_print(gamma_t *g) {
+// 	printf("=== GAMMA PROPERTIES ===\n");
+// 	printf("{ width: %d, height: %d, player_count: %d, max_areas: %d }\n", g->field_width, g->field_height, g->player_count, g->max_player_areas);
+
+// 	printf("=== PLAYERS ===\n");
+// 	for (uint32_t i = 0; i < g->player_count; i++) {
+// 		printf(
+// 			"#%d: { taken_fields: %ld, available_adjacent: %ld, available_far: %ld, areas: %d }\n",
+// 			i + 1,
+// 			g->players[i]->taken_fields,
+// 			g->players[i]->available_fields_adjacent,
+// 			g->players[i]->available_fields_far,
+// 			g->players[i]->occupied_areas
+// 		);
+// 	}
+
+// 	printf("=== FIELD ===\n");
+// 	for (uint32_t y = 0; y < g->field_height; y++) {
+// 		for (uint32_t x = 0; x < g->field_width; x++) {
+// 			printf("%d ", *get_arr_32(g->field, x, y));
+// 		}
+// 		printf("\n");
+// 	}
+
+// 	printf("==========================================================================================\n");
+// }
+/* DEBUGGING */
+
+
 /* checking if arguments are correct */
-bool check_gamma_exists(gamma_t* gamma) {
-	return gamma ? true : false;
+bool check_gamma_exists(gamma_t* g) {
+	return g ? true : false;
 }
 
 
-bool check_player_correct(gamma_t* gamma, uint32_t player) {
-	return player > 0 && player <= gamma->player_count;
+bool check_player_correct(gamma_t* g, uint32_t player) {
+	return player > 0 && player <= g->player_count;
 }
 
 
-bool check_field_correct(gamma_t* gamma, uint32_t x, uint32_t y) {
-	return x <= gamma->field_width && y <= gamma->field_height;
+bool check_field_correct(gamma_t* g, uint32_t x, uint32_t y) {
+	return x < g->field_width && y < g->field_height;
 }
 /* checking if the arguments are correct */
 
 
 // check if the field[y][x] exists in our game
-bool check_field_exists(gamma_t *gamma, uint32_t x, uint32_t y, uint32_t dir) {
+bool check_field_exists(gamma_t *g, uint32_t x, uint32_t y, uint32_t dir) {
 	if (dir == 0) {
 		// up, [y - 1][x]
 		return y > 0;
 	}
 	if (dir == 1) {
 		// right, [y][x + 1]
-		return x + 1 <= gamma->field_width;
+		return x + 1 < g->field_width;
 	}
 	if (dir == 2) {
 		// down, [y + 1][x]
-		return y + 1 <= gamma->field_height;
+		return y + 1 < g->field_height;
 	}
 	// left, [y][x - 1]
 	return x > 0;
@@ -86,7 +120,7 @@ bool check_field_exists(gamma_t *gamma, uint32_t x, uint32_t y, uint32_t dir) {
 
 // returns the number of adjacent field that belong to [player]
 uint32_t get_neighbour_count(
-	gamma_t *gamma,
+	gamma_t *g,
 	uint32_t player,
 	uint32_t x,
 	uint32_t y
@@ -97,8 +131,8 @@ uint32_t get_neighbour_count(
 		uint32_t new_x = x + offset_x[i];
 		uint32_t new_y = y + offset_y[i];
 		if (
-			check_field_exists(gamma, x, y, i) &&
-			*get_arr_32(gamma->field, new_x, new_y) == player
+			check_field_exists(g, x, y, i) &&
+			*get_arr_32(g->field, new_x, new_y) == player
 		) {
 			neighbour_count++;
 		}
@@ -109,8 +143,8 @@ uint32_t get_neighbour_count(
 
 
 // finds the leader of the field
-uint64_t find_leader(gamma_t *gamma, uint32_t x, uint32_t y) {
-	uint64_t curr_leader = *get_arr_64(gamma->leader, x, y);
+uint64_t find_leader(gamma_t *g, uint32_t x, uint32_t y) {
+	uint64_t curr_leader = *get_arr_64(g->leader, x, y);
 	uint64_t array_index = get_array_index(x, y);
 	if (curr_leader == array_index) {
 		return curr_leader;
@@ -118,8 +152,8 @@ uint64_t find_leader(gamma_t *gamma, uint32_t x, uint32_t y) {
 
 	uint32_t leader_x = get_array_x_from_index(curr_leader);
 	uint32_t leader_y = get_array_y_from_index(curr_leader);
-	uint64_t new_leader = find_leader(gamma, leader_x, leader_y);
-	*get_arr_64(gamma->leader, x, y) = new_leader;
+	uint64_t new_leader = find_leader(g, leader_x, leader_y);
+	*get_arr_64(g->leader, x, y) = new_leader;
 
 	return new_leader;
 }
@@ -136,55 +170,55 @@ gamma_t* gamma_new(
 		return NULL;
 	}
 
-	gamma_t *gamma = malloc(sizeof(gamma_t));
-	if (!gamma) {
+	gamma_t *g = malloc(sizeof(gamma_t));
+	if (!g) {
 		return NULL;
 	}
 
-	gamma->field_width = width;
-	gamma->field_height = height;
-	gamma->player_count = players;
-	gamma->max_player_areas = areas;
+	g->field_width = width;
+	g->field_height = height;
+	g->player_count = players;
+	g->max_player_areas = areas;
 
 	// do I have to initiate it with zeros?
-	gamma->field = allocate_2d_array_uint32(height, width);
-	if (!gamma->field) {
-		free(gamma);
+	g->field = allocate_2d_array_uint32(height, width);
+	if (!g->field) {
+		free(g);
 		return NULL;
 	}
 
 	// do I have to initiate it with zeros?
-	gamma->leader = allocate_2d_array_uint64(height, width);
-	if (!gamma->leader) {
-		free_2d_array_uint32(gamma->field);
-		free(gamma);
+	g->leader = allocate_2d_array_uint64(height, width);
+	if (!g->leader) {
+		free_2d_array_uint32(g->field);
+		free(g);
 		return NULL;
 	}
 
-	gamma->players = malloc(players * sizeof(player_t));
-	if (!gamma->players) {
-		free_2d_array_uint32(gamma->field);
-		free_2d_array_uint64(gamma->leader);
-		free(gamma);
+	g->players = malloc(players * sizeof(player_t));
+	if (!g->players) {
+		free_2d_array_uint32(g->field);
+		free_2d_array_uint64(g->leader);
+		free(g);
 		return NULL;
 	}
 	
 	for (uint32_t i = 0; i < players; i++) {
-		gamma->players[i] = player_new(height, width);
-		if (!gamma->players[i]) {
+		g->players[i] = player_new(height, width);
+		if (!g->players[i]) {
 			for (long long j = i - 1; j >= 0; j--) {
-				free(gamma->players[j]);
+				free(g->players[j]);
 			}
-			free(gamma->players);
+			free(g->players);
 
-			free_2d_array_uint32(gamma->field);
-			free_2d_array_uint64(gamma->leader);
-			free(gamma);
+			free_2d_array_uint32(g->field);
+			free_2d_array_uint64(g->leader);
+			free(g);
 			return NULL;
 		}
 	}
 
-	return gamma;
+	return g;
 }
 
 
@@ -207,16 +241,16 @@ void gamma_delete(gamma_t *g) {
 
 // sets the leader of the field[new_y][new_x] to the index of field[y][x]
 void manage_leader(
-	gamma_t *gamma, 
+	gamma_t *g, 
 	uint32_t x,
 	uint32_t y,
 	uint32_t new_x,
 	uint32_t new_y
 ) {
-	uint64_t leader_index = find_leader(gamma, new_x, new_y);
+	uint64_t leader_index = find_leader(g, new_x, new_y);
 	uint32_t leader_x = get_array_x_from_index(leader_index);
 	uint32_t leader_y = get_array_y_from_index(leader_index);
-	*get_arr_64(gamma->leader, leader_x, leader_y) = get_array_index(x, y);
+	*get_arr_64(g->leader, leader_x, leader_y) = get_array_index(x, y);
 }
 
 
@@ -257,11 +291,11 @@ bool gamma_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
 
 	// == manage all players available fields ==
 	// managing the field that has been taken
-	for (uint32_t i = 0; i < g->player_count; i++) {
+	for (uint32_t i = 1; i <= g->player_count; i++) {
 		if (get_neighbour_count(g, i, x, y) > 0) {
-			g->players[i]->available_fields_adjacent--;
+			g->players[i - 1]->available_fields_adjacent--;
 		} else {
-			g->players[i]->available_fields_far--;
+			g->players[i - 1]->available_fields_far--;
 		}
 	}
 
@@ -271,6 +305,7 @@ bool gamma_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
 		uint32_t new_y = y + offset_y[i];
 		if (
 			check_field_exists(g, x, y, i) &&
+			*get_arr_32(g->field, new_x, new_y) == 0 &&
 			get_neighbour_count(g, player, new_x, new_y) == 1
 		) {
 			g->players[player - 1]->available_fields_adjacent++;
@@ -284,41 +319,42 @@ bool gamma_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
 
 // dfs that sets all connected player fields leader to [new_leader]
 void set_leader(
-	gamma_t *gamma,
+	gamma_t *g,
 	uint32_t player,
 	uint64_t new_leader,
 	uint32_t x,
 	uint32_t y
 ) {
-	*get_arr_64(gamma->leader, x, y) = new_leader;
+	*get_arr_64(g->leader, x, y) = new_leader;
 	
 	for (int i = 0; i < 4; i++) {
 		uint32_t new_x = x + offset_x[i];
 		uint32_t new_y = y + offset_y[i];
 		if (
-			check_field_exists(gamma, x, y, i) &&
-			*get_arr_32(gamma->field, new_x, new_y) == player
+			check_field_exists(g, x, y, i) &&
+			*get_arr_32(g->field, new_x, new_y) == player &&
+			*get_arr_64(g->leader, new_x, new_y) != new_leader
 		) {
-			set_leader(gamma, player, new_leader, new_x, new_y);
+			set_leader(g, player, new_leader, new_x, new_y);
 		}
 	}
 }
 
 
 // unlinks field[y][x] from [player]
-void clear_field(gamma_t *gamma, uint32_t player, uint32_t x, uint32_t y) {
+void clear_field(gamma_t *g, uint32_t player, uint32_t x, uint32_t y) {
 	// == resets field owner ==
-	*get_arr_32(gamma->field, x, y) = 0;
-	gamma->players[player - 1]->taken_fields--;
-	gamma->players[player - 1]->occupied_areas--;
+	*get_arr_32(g->field, x, y) = 0;
+	g->players[player - 1]->taken_fields--;
+	g->players[player - 1]->occupied_areas--;
 
 	// == manage available_fields due to removing a players field ==
 	// managing the field that has been cleared
-	for (uint32_t i = 0; i < gamma->player_count; i++) {
-		if (get_neighbour_count(gamma, i, x, y) > 0) {
-			gamma->players[i]->available_fields_adjacent++;
+	for (uint32_t i = 1; i <= g->player_count; i++) {
+		if (get_neighbour_count(g, i, x, y) > 0) {
+			g->players[i - 1]->available_fields_adjacent++;
 		} else {
-			gamma->players[i]->available_fields_far++;
+			g->players[i - 1]->available_fields_far++;
 		}
 	}
 
@@ -327,11 +363,12 @@ void clear_field(gamma_t *gamma, uint32_t player, uint32_t x, uint32_t y) {
 		uint32_t new_x = x + offset_x[i];
 		uint32_t new_y = y + offset_y[i];
 		if (
-			check_field_exists(gamma, x, y, i) &&
-			get_neighbour_count(gamma, player, new_x, new_y) == 0
+			check_field_exists(g, x, y, i) &&
+			*get_arr_32(g->field, new_x, new_y) == 0 &&
+			get_neighbour_count(g, player, new_x, new_y) == 0
 		) {
-			gamma->players[player - 1]->available_fields_adjacent--;
-			gamma->players[player - 1]->available_fields_far++;
+			g->players[player - 1]->available_fields_adjacent--;
+			g->players[player - 1]->available_fields_far++;
 		}
 	}
 
@@ -342,19 +379,19 @@ void clear_field(gamma_t *gamma, uint32_t player, uint32_t x, uint32_t y) {
 		uint32_t new_x = x + offset_x[i];
 		uint32_t new_y = y + offset_y[i];
 		if (
-			check_field_exists(gamma, new_x, new_y, i) &&
-			*get_arr_32(gamma->field, new_x, new_y) == player &&
-			*get_arr_64(gamma->leader, new_x, new_y) != last_leader
+			check_field_exists(g, x, y, i) &&
+			*get_arr_32(g->field, new_x, new_y) == player &&
+			*get_arr_64(g->leader, new_x, new_y) != last_leader
 		) {
 			set_leader(
-				gamma,
+				g,
 				player,
 				get_array_index(new_x, new_y),
 				new_x,
 				new_y
 			);
-			last_leader = *get_arr_64(gamma->leader, new_x, new_y);
-			gamma->players[player - 1]->occupied_areas++;
+			last_leader = *get_arr_64(g->leader, new_x, new_y);
+			g->players[player - 1]->occupied_areas++;
 		}
 	}
 }
@@ -470,7 +507,7 @@ char* gamma_board(gamma_t *g) {
 			get_power_of_ten(g->players[i]->taken_fields) + 2;
 	}
 	uint64_t space_required = 
-		(g->field_width + 1) * g->field_height + bonus_brackets_space;
+		(g->field_width + 1) * g->field_height + bonus_brackets_space + 1;
 	
 	char *gamma_to_string = malloc(space_required * sizeof(char));
 	if (!gamma_to_string) {
@@ -478,7 +515,8 @@ char* gamma_board(gamma_t *g) {
 	}
 
 	uint64_t size = 0;
-	for (uint32_t y = 0; y < g->field_height; y++) {
+	long long safe_stop = g->field_height - 1;
+	for (uint32_t y = g->field_height - 1; safe_stop >= 0; y--, safe_stop--) {
 		for (uint32_t x = 0; x < g->field_width; x++) {
 			if (*get_arr_32(g->field, x, y) == 0) {
 				gamma_to_string[size++] = '.';
@@ -499,10 +537,6 @@ char* gamma_board(gamma_t *g) {
 		gamma_to_string[size++] = '\n';
 	}
 	gamma_to_string[size++] = 0;
-
-	if (size != space_required) {
-		gamma_to_string[0] = 'F';
-	}
 
 	return gamma_to_string;
 }

@@ -32,8 +32,8 @@ static const char board[] =
 	"1221......\n"
 	"1.........\n";
 
-/** @brief Testuje silnik gry gamma.
- * Przeprowadza przykładowe testy silnika gry gamma.
+/** @brief Testuje silnik gry g.
+ * Przeprowadza przykładowe testy silnika gry g.
  * @return Zero, gdy wszystkie testy przebiegły poprawnie,
  * a w przeciwnym przypadku kod zakończenia programu jest kodem błędu.
  */
@@ -46,13 +46,12 @@ int main() {
 
 	g = gamma_new(10, 10, 2, 3);
 	assert(g != NULL);
-
+	
 	assert(gamma_move(g, 1, 0, 0));
 	assert(gamma_busy_fields(g, 1) == 1);
 	assert(gamma_busy_fields(g, 2) == 0);
 	assert(gamma_free_fields(g, 1) == 99);
 	assert(gamma_free_fields(g, 2) == 99);
-	printf("%d\n", gamma_golden_possible(g, 1) ? 1 : 0);
 	assert(!gamma_golden_possible(g, 1));
 	assert(gamma_move(g, 2, 3, 1));
 	assert(gamma_busy_fields(g, 1) == 1);
@@ -91,10 +90,17 @@ int main() {
 
 	char *p = gamma_board(g);
 	assert(p);
-	assert(strcmp(p, board) == 0);
 	printf("%s", p);
+	assert(strcmp(p, board) == 0);
 	free(p);
 
 	gamma_delete(g);
 	return 0;
 }
+
+/* DEBUGGING
+
+**g->field@10
+*(*g->field+10)@10
+
+*/

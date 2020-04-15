@@ -115,4 +115,8 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player);
  */
 char* gamma_board(gamma_t *g);
 
+/* DEBUGGING */
+void gamma_print(gamma_t *g);
+/* DEBUGGING */
+
 #endif /* GAMMA_H */
