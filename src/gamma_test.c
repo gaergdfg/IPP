@@ -97,10 +97,3 @@ int main() {
 	gamma_delete(g);
 	return 0;
 }
-
-/* DEBUGGING
-
-**g->field@10
-*(*g->field+10)@10
-
-*/
