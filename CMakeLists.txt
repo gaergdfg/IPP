@@ -21,7 +21,7 @@ set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
 
 # Wskazujemy pliki źródłowe.
 set(SOURCE_FILES
-    ${TEST_FILE}
+    src/gamma_test.c
     src/gamma.c
     src/gamma.h
     src/array_util.c
