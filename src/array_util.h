@@ -26,7 +26,7 @@
  * @param[in] x     : drugi indeks tablicy
  * @param[in] y     : pierwszy indeks tablicy
  * 
- * @return wartosc arr[y][x]
+ * @return wskaznik na arr[y][x]
  */
 uint32_t* get_arr_32(uint32_t **arr, uint32_t x, uint32_t y);
 
@@ -39,7 +39,7 @@ uint32_t* get_arr_32(uint32_t **arr, uint32_t x, uint32_t y);
  * @param[in] x     : drugi indeks tablicy
  * @param[in] y     : pierwszy indeks tablicy
  * 
- * @return wartosc arr[y][x]
+ * @return wskaznik na arr[y][x]
  */
 uint64_t* get_arr_64(uint64_t **arr, uint32_t x, uint32_t y);
 

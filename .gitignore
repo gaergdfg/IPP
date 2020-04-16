@@ -1,4 +1,4 @@
 .vscode
-build
-build-debug
+debug
 TODO
+tests

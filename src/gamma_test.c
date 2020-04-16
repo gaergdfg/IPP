@@ -90,7 +90,7 @@ int main() {
 
 	char *p = gamma_board(g);
 	assert(p);
-	printf("%s", p);
+	// printf("%s", p);
 	assert(strcmp(p, board) == 0);
 	free(p);
 
