@@ -207,7 +207,6 @@ uint32_t get_neighbour_count(
 }
 
 
-// finds the leader of the field
 /**
  * @brief Znajduje lidera pola o wspolrzednych [x], [y].
  * Znajduje lidera pola zgodnie z algorytmem Find & Union, przestawiajac
@@ -259,7 +258,6 @@ gamma_t* gamma_new(
 	uint32_t areas
 ) {
 	if (width == 0 || height == 0 || players == 0 || areas == 0) {
-		// consider: [areas] > [width] * [height]
 		return NULL;
 	}
 
@@ -336,7 +334,6 @@ void gamma_delete(gamma_t *g) {
 }
 
 
-// sets the leader of the field[new_y][new_x] to the index of field[y][x]
 /**
  * @brief Ustawia lidera pola o wspolrzednych [new_x], [new_y] na indeks pola o
  * wspolrzednych [x], [y].
