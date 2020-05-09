@@ -17,8 +17,8 @@
  * 
  * @param[in] c : znak, ktory sprawdzamy
  * 
- * @return 1, jesli @p c jest dozwolonym bialym znakiem, 0 w przeciwnym
- * wypadku.
+ * @return Jesli @p c jest dozwolonym bialym znakiem zwraca 1, w przeciwnym
+ * wypadku 0.
  */
 int check_white_character(char c) {
 	return c == 9 || c == 11 || c == 12 || c == 13 || c == 32;
@@ -31,8 +31,8 @@ int check_white_character(char c) {
  * @param[in] instruction   : wskaznik na poczatek napisu
  * @param[in] size          : dlugosc napisu
  * 
- * @return 1, gdy w napisie sa niedozwolone biale znaki, 0 w przeciwnym
- * wypadku.
+ * @return Gdy w napisie sa niedozwolone biale znaki zwraca 1, w przeciwnym
+ * wypadku 0.
  */
 int check_for_illegal_signs(char *instruction, int size) {
 	unsigned char c;
@@ -123,7 +123,7 @@ command_t *create_new_command(command_type_t command_type) {
 /**
  * @brief Zwalnia pamiec zaalokowana na polecenie @p command.
  * 
- * @param[in,out] command   : polecenie, ktorego pamiec zwalniamy
+ * @param[in,out] command   : wskaznik na strukture zawierajaca dane o poleceniu
  */
 void erase_command(command_t *command) {
 	free(command);
@@ -200,6 +200,24 @@ command_type_t check_for_invalid_input_format(char *instruction, int size) {
 
 
 /**
+ * @brief Sprawdza, czy @p input jest poprawnym zapisem liczby.
+ * 
+ * @param[in] input : wskaznik na poczatek napisu
+ * 
+ * @return Gdy @p input jest poprawnym zapisem liczby zwraca 1, w przeciwnym
+ * wypadku 0.
+ */
+int is_valid_number(char *input) {
+	for (char *c = input; *c != 0; c++) {
+		if (*c < '0' || *c > '9') {
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
+/**
  * @brief Przetwarza instrukcje o poprawnym formacie na typ @ref command_t.
  * 
  * @param[in] instruction   : wskaznik na poczatek instrukcji
@@ -226,6 +244,10 @@ command_t *parse_command(char *instruction) {
 			erase_command(command);
 			return create_new_command(ERROR);
 		}
+		if (!is_valid_number(pointer)) {
+			erase_command(command);
+			return create_new_command(ERROR);
+		}
 		command->args[count] = strtoul(pointer, NULL, 0);
 		count++;
 	}
@@ -240,8 +262,8 @@ command_t *parse_command(char *instruction) {
  * 
  * @param[in] command   : wskaznik na strukture przechowujaca polecenie
  * 
- * @return 1, gdy polecenie ma poprawna liczba argumentow, 0 w przeciwnym
- * wypadku.
+ * @return Gdy polecenie ma poprawna liczba argumentow zwraca 1, w przeciwnym
+ * wypadku 0.
  */
 int check_correct_arguments_number(command_t *command) {
 	if (command->command_type == NEW_GAME_BATCH) {

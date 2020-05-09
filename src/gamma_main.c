@@ -1,5 +1,6 @@
 #include "gamma.h"
 #include "parser.h"
+#include "command_handler.h"
 #include <stdio.h>
 
 char *toString(command_t *command) {
@@ -32,14 +33,14 @@ char *toString(command_t *command) {
 
 
 int main() {
-	int line = 1;
+	int line = 0, game_state = 0;
+	gamma_t *gamma;
 	command_t *command;
 
 	while ((command = get_command())->command_type != EXIT) {
-		// execute_command(command, line);
 		printf("%s(%d, %d, %d, %d)\n", toString(command), command->args[0], command->args[1], command->args[2], command->args[3]);
+		execute_command(command, &gamma, &game_state, ++line);
 		erase_command(command);
-		line++;
 	}
 
 	erase_command(command);

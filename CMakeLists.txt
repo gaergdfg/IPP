@@ -29,7 +29,9 @@ set(SOURCE_FILES
     src/memory_util.c
     src/memory_util.h
     src/parser.c
-    src/parser.h)
+    src/parser.h
+    src/command_handler.c
+    src/command_handler.h)
 
 # Wskazujemy plik wykonywalny.
 add_executable(gamma ${SOURCE_FILES})
