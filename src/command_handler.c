@@ -1,3 +1,11 @@
+/**
+ * @file Implementacja modulu zajmujacego sie wykonywaniem polecen
+ * przekazywanych na wejsciu.
+ * 
+ * @author Piotr Prabucki <pp418377@students.mimuw.edu.pl>
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>

@@ -1,3 +1,11 @@
+/**
+ * @file Interfejs modulu zajmujacego sie wykonywaniem polecen przekazywanych na
+ * wejsciu.
+ * 
+ * @author Piotr Prabucki <pp418377@students.mimuw.edu.pl>
+ */
+
+
 #ifndef COMMAND_HANDLER_H
 #define COMMAND_HANDLER_H
 

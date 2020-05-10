@@ -1,3 +1,10 @@
+/**
+ * @file Glowny plik programu
+ * 
+ * @author Piotr Prabucki <pp418377@students.mimuw.edu.pl>
+ */
+
+
 #include "gamma.h"
 #include "parser.h"
 #include "command_handler.h"
@@ -43,6 +50,7 @@ int main() {
 		erase_command(command);
 	}
 
+	gamma_remove(gamma);
 	erase_command(command);
 
 	return 0;
