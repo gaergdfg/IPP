@@ -1,3 +1,10 @@
+/** @file
+ * Inferfejs modulu analizujacego skladnie wejscia
+ * 
+ * @author Piotr Prabucki <pp418377@students.mimuw.edu.pl>
+ */
+
+
 #ifndef PARSER_H
 #define PARSER_H
 

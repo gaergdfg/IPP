@@ -1,5 +1,5 @@
-/**
- * @file Implementacja modulu analizujacego skladnie wejscia.
+/** @file
+ * Implementacja modulu analizujacego skladnie wejscia
  * 
  * @author Piotr Prabucki <pp418377@students.mimuw.edu.pl>
  */

@@ -1,21 +1,74 @@
 /** @file
- * Interfejs klasy przechowującej stan gry gamma
+ * Interfejs klasy przechowującej stan gry gamma zmodyfikowany na potrzeby
+ * rozwoju projektu przez Piotra Prabuckiego
  *
  * @author Marcin Peczarski <marpe@mimuw.edu.pl>
  * @copyright Uniwersytet Warszawski
  * @date 18.03.2020
  */
 
+
 #ifndef GAMMA_H
 #define GAMMA_H
+
 
 #include <stdbool.h>
 #include <stdint.h>
 
+
 /**
- * Struktura przechowująca stan gry.
+ * Struktura przechowujaca dane gracza.
+ * 
+ * @param used_golden_move          : wartosc logiczna mowiaca, czy gracz
+ *                                    uzyl juz zloty ruch
+ * @param taken_fields              : liczba pol zajetych przez gracza
+ * @param available_fields_adjacent : liczba pol mozliwych do zajecia przez
+ *                                    gracza bez koniecznosci wykorzystania
+ *                                    jeszcze jednego obszaru
+ * @param available_fields_far      : liczba pol mozliwych do zajecia przez
+ *                                    gracza z koniecznoscia wykorzystania
+ *                                    jeszcze jednego obszaru
+ * @param occupied_areas            : liczba obszarow zajetych przez gracza
  */
-typedef struct gamma gamma_t;
+typedef struct player {
+	bool used_golden_move;
+	uint64_t taken_fields;
+	uint64_t available_fields_adjacent;
+	uint64_t available_fields_far;
+	uint32_t occupied_areas;
+} player_t;
+
+
+/**
+ * Struktura przechowujaca stan gry.
+ * 
+ * @param field_height      : wysokosc planszy
+ * @param field_width       : szerokosc planszy
+ * @param player_count      : maksymalna liczba graczy grajacych w te gre
+ * @param max_player_areas  : maksymalna liczba obszarow, jakie moze posiadac
+ *                            gracz w danym momencie gry
+ * @param field             : reprezentacja planszy gry (tablica dwuwymiarowa),
+ *                            ktora w danym miejscu trzyma numer gracza, ktorego
+ *                            pionek stoi na tym polu lub 0, gdy zaden gracz nie
+ *                            ma pionka na tym polu
+ * @param leader            : tablica dwuwymiarowa zawierajaca lidera z
+ *                            algorytmu Find & Union uzywanego do zliczania
+ *                            obszarow zajetych przez gracza
+ * 
+ * @param max_player_areas  : maksymalna liczba obszarow, ktore gracz moze
+ *                            zajmowac w danym momencie gry
+ */
+typedef struct gamma {
+	uint32_t field_height;
+	uint32_t field_width;
+	uint32_t player_count;
+	uint32_t max_player_areas;
+
+	uint32_t** field;
+	uint64_t** leader;
+	player_t** players;
+} gamma_t;
+
 
 /** @brief Tworzy strukturę przechowującą stan gry.
  * Alokuje pamięć na nową strukturę przechowującą stan gry.
@@ -35,12 +88,14 @@ gamma_t* gamma_new(
 	uint32_t areas
 );
 
+
 /** @brief Usuwa strukturę przechowującą stan gry.
  * Usuwa z pamięci strukturę wskazywaną przez @p g.
  * Nic nie robi, jeśli wskaźnik ten ma wartość NULL.
  * @param[in] g       – wskaźnik na usuwaną strukturę.
  */
 void gamma_delete(gamma_t *g);
+
 
 /** @brief Wykonuje ruch.
  * Ustawia pionek gracza @p player na polu (@p x, @p y).
@@ -55,6 +110,7 @@ void gamma_delete(gamma_t *g);
  * gdy ruch jest nielegalny lub któryś z parametrów jest niepoprawny.
  */
 bool gamma_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y);
+
 
 /** @brief Wykonuje złoty ruch.
  * Ustawia pionek gracza @p player na polu (@p x, @p y) zajętym przez innego
@@ -72,6 +128,7 @@ bool gamma_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y);
  */
 bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y);
 
+
 /** @brief Podaje liczbę pól zajętych przez gracza.
  * Podaje liczbę pól zajętych przez gracza @p player.
  * @param[in] g       – wskaźnik na strukturę przechowującą stan gry,
@@ -81,6 +138,7 @@ bool gamma_golden_move(gamma_t *g, uint32_t player, uint32_t x, uint32_t y);
  * jeśli któryś z parametrów jest niepoprawny.
  */
 uint64_t gamma_busy_fields(gamma_t *g, uint32_t player);
+
 
 /** @brief Podaje liczbę pól, jakie jeszcze gracz może zająć.
  * Podaje liczbę wolnych pól, na których w danym stanie gry gracz @p player może
@@ -92,6 +150,7 @@ uint64_t gamma_busy_fields(gamma_t *g, uint32_t player);
  * jeśli któryś z parametrów jest niepoprawny.
  */
 uint64_t gamma_free_fields(gamma_t *g, uint32_t player);
+
 
 /** @brief Sprawdza, czy gracz może wykonać złoty ruch.
  * Sprawdza, czy gracz @p player jeszcze nie wykonał w tej rozgrywce złotego
@@ -105,6 +164,7 @@ uint64_t gamma_free_fields(gamma_t *g, uint32_t player);
  */
 bool gamma_golden_possible(gamma_t *g, uint32_t player);
 
+
 /** @brief Daje napis opisujący stan planszy.
  * Alokuje w pamięci bufor, w którym umieszcza napis zawierający tekstowy
  * opis aktualnego stanu planszy. Przykład znajduje się w pliku gamma_test.c.
@@ -114,5 +174,6 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player);
  * planszy lub NULL, jeśli nie udało się zaalokować pamięci.
  */
 char* gamma_board(gamma_t *g);
+
 
 #endif /* GAMMA_H */

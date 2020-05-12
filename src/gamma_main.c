@@ -1,5 +1,5 @@
-/**
- * @file Glowny plik programu
+/** @file
+ * Glowny plik programu
  * 
  * @author Piotr Prabucki <pp418377@students.mimuw.edu.pl>
  */
@@ -48,9 +48,14 @@ int main() {
 		printf("%s(%d, %d, %d, %d)\n", toString(command), command->args[0], command->args[1], command->args[2], command->args[3]);
 		execute_command(command, &gamma, &game_state, ++line);
 		erase_command(command);
+
+		if (game_state == 2) {
+			gamma_delete(gamma);
+			return 0;
+		}
 	}
 
-	gamma_remove(gamma);
+	gamma_delete(gamma);
 	erase_command(command);
 
 	return 0;

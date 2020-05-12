@@ -1,6 +1,6 @@
-/**
- * @file Interfejs modulu zajmujacego sie wykonywaniem polecen przekazywanych na
- * wejsciu.
+/** @file
+ * Interfejs modulu zajmujacego sie wykonywaniem polecen przekazywanych na
+ * wejsciu
  * 
  * @author Piotr Prabucki <pp418377@students.mimuw.edu.pl>
  */

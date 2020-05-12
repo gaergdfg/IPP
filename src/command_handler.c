@@ -1,6 +1,6 @@
-/**
- * @file Implementacja modulu zajmujacego sie wykonywaniem polecen
- * przekazywanych na wejsciu.
+/** @file
+ * Implementacja modulu zajmujacego sie wykonywaniem polecen
+ * przekazywanych na wejsciu
  * 
  * @author Piotr Prabucki <pp418377@students.mimuw.edu.pl>
  */
@@ -11,6 +11,7 @@
 #include <inttypes.h>
 #include "gamma.h"
 #include "parser.h"
+#include "interactive_mode_handler.h"
 
 
 /**
@@ -55,9 +56,11 @@ void execute_command(
 			}
 			*gamma = gamma_new(arg0, arg1, arg2, arg3);
 			if (!(*gamma)) {
-				*game_state = 2;
 				printf("ERROR %d\n", line);
 				break;
+			} else {
+				*game_state = 2;
+				run_interactive_mode(gamma ,arg0, arg1 + 1, arg2);
 			}
 			break;
 		case MOVE:
