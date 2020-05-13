@@ -89,7 +89,6 @@ void reset_screen(
 	clear_screen();
 
 	print_board(gamma, cell_size - 1, player);
-	printf("(%d, %d)\n", column - 1, row);
 
 	printf("\033[%d;%dH", column, (row + 1) * cell_size - 1);
 }
@@ -183,23 +182,49 @@ void run_interactive_mode(
 	reset_screen(*gamma, cursor_pos_x, cursor_pos_y, cell_size, player);
 
 	char input;
-	while ((input = getchar())) {
+	int flag_escape = 0, flag_escape_followed = 0;
+	while ((input = getc(stdin))) {
 		switch (input) {
 			case 4: // CTRL - D
 				clear_screen();
 				tcsetattr(0, TCSANOW, &g_old_kbd_mode);
 				return;
-			case 65: // UP
-				move_cursor(&cursor_pos_y, -1, 1, boundary_y);
+			case 27: // ESCAPE
+				flag_escape = 1;
 				break;
-			case 67: // RIGHT
-				move_cursor(&cursor_pos_x, 1, 0, boundary_x);
+			case 91: // [
+				if (flag_escape) {
+					flag_escape_followed = 1;
+				}
+				break;
+			case 65: // UP
+				if (flag_escape_followed) {
+					move_cursor(&cursor_pos_y, -1, 1, boundary_y);
+				}
+				break;
+			case 'c':
+			case 67: // RIGHT | 'C'
+				if (flag_escape_followed) {
+					move_cursor(&cursor_pos_x, 1, 0, boundary_x);
+				}
+				else {
+					player = get_next_player(*gamma, player, max_player_number);
+					if (player == -1) {
+						clear_screen();
+						tcsetattr(0, TCSANOW, &g_old_kbd_mode);
+						return;
+					}
+				}
 				break;
 			case 66: // DOWN
-				move_cursor(&cursor_pos_y, 1, 1, boundary_y);
+				if (flag_escape_followed) {
+					move_cursor(&cursor_pos_y, 1, 1, boundary_y);
+				}
 				break;
 			case 68: // LEFT
-				move_cursor(&cursor_pos_x, -1, 0, boundary_x);
+				if (flag_escape_followed) {
+					move_cursor(&cursor_pos_x, -1, 0, boundary_x);
+				}
 				break;
 			case 32: // SPACE
 				if (
@@ -234,15 +259,15 @@ void run_interactive_mode(
 					}
 				}
 				break;
-			// case 'c':
-			// case 'C':
-			// 	player = get_next_player(*gamma, player, max_player_number);
-			// 	if (player == -1) {
-			// 		// terminate the program
-			// 	}
-			// 	break;
 			default:
 				break;
+		}
+
+		if (flag_escape && input != 27) {
+			flag_escape = 0;
+		}
+		if (flag_escape_followed && input != 91) {
+			flag_escape_followed = 0;
 		}
 
 		reset_screen(*gamma, cursor_pos_x, cursor_pos_y, cell_size, player);
