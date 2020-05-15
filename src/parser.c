@@ -200,7 +200,8 @@ command_type_t check_for_invalid_input_format(char *instruction, int size) {
 
 
 /**
- * @brief Sprawdza, czy @p input jest poprawnym zapisem liczby.
+ * @brief Sprawdza, czy @p input jest poprawnym zapisem liczby oraz, jesli tak
+ * jest, sprawdza, czy ta liczba miesci sie w zmiennej typu uint32_t.
  * 
  * @param[in] input : wskaznik na poczatek napisu
  * 
@@ -208,11 +209,22 @@ command_type_t check_for_invalid_input_format(char *instruction, int size) {
  * wypadku 0.
  */
 int is_valid_number(char *input) {
+	int size = 0;
 	for (char *c = input; *c != 0; c++) {
+		size++;
 		if (*c < '0' || *c > '9') {
 			return 0;
 		}
 	}
+	if (size > 10) {
+		return 0;
+	}
+
+	uint64_t parsed_number = strtoull(input, NULL, 0);
+	if (parsed_number > UINT32_MAX) {
+		return 0;
+	}
+
 	return 1;
 }
 

@@ -29,6 +29,17 @@ void execute_command(
 	int *game_state,
 	int line
 ) {
+	if (
+		command->command_type != NEW_GAME_BATCH &&
+		command->command_type != NEW_GAME_INTERACTIVE &&
+		command->command_type != SKIP &&
+		command->command_type != ERROR &&
+		!(*game_state)
+	) {
+		fprintf(stderr, "ERROR %d\n", line);
+		return;
+	}
+
 	int arg0 = command->args[0];
 	int arg1 = command->args[1];
 	int arg2 = command->args[2];
@@ -37,26 +48,26 @@ void execute_command(
 	switch (command->command_type) {
 		case NEW_GAME_BATCH:
 			if (*game_state > 0) {
-				printf("ERROR1 %d\n", line);
+				fprintf(stderr, "ERROR %d\n", line);
 				break;
 			}
 			*gamma = gamma_new(arg0, arg1, arg2, arg3);
 			if (!(*gamma)) {
-				printf("ERROR2 %d\n", line);
+				fprintf(stderr, "ERROR %d\n", line);
 				break;
 			} else {
 				*game_state = 1;
-				printf("OK %d\n", line);
+				fprintf(stdout, "OK %d\n", line);
 			}
 			break;
 		case NEW_GAME_INTERACTIVE:
 			if (*game_state > 0) {
-				printf("ERROR %d\n", line);
+				fprintf(stderr, "ERROR %d\n", line);
 				break;
 			}
 			*gamma = gamma_new(arg0, arg1, arg2, arg3);
 			if (!(*gamma)) {
-				printf("ERROR %d\n", line);
+				fprintf(stderr, "ERROR %d\n", line);
 				break;
 			} else {
 				*game_state = 2;
@@ -64,27 +75,27 @@ void execute_command(
 			}
 			break;
 		case MOVE:
-			printf("%d\n", gamma_move(*gamma, arg0, arg1, arg2));
+			fprintf(stdout, "%d\n", gamma_move(*gamma, arg0, arg1, arg2));
 			break;
 		case GOLDEN_MOVE:
-			printf("%d\n", gamma_golden_move(*gamma, arg0, arg1, arg2));
+			fprintf(stdout, "%d\n", gamma_golden_move(*gamma, arg0, arg1, arg2));
 			break;
 		case BUSY_FIELDS:
-			printf("%" PRIu64 "\n", gamma_busy_fields(*gamma, arg0));
+			fprintf(stdout, "%" PRIu64 "\n", gamma_busy_fields(*gamma, arg0));
 			break;
 		case FREE_FIELDS:
-			printf("%" PRIu64 "\n", gamma_free_fields(*gamma, arg0));
+			fprintf(stdout, "%" PRIu64 "\n", gamma_free_fields(*gamma, arg0));
 			break;
 		case GOLDEN_POSSIBLE:
-			printf("%d\n", gamma_golden_possible(*gamma, arg0));
+			fprintf(stdout, "%d\n", gamma_golden_possible(*gamma, arg0));
 			break;
 		case BOARD:;
 			char *board = gamma_board(*gamma);
-			printf("%s", board);
+			fprintf(stdout, "%s", board);
 			free(board);
 			break;
 		case ERROR:
-			printf("ERROR %d\n", line);
+			fprintf(stderr, "ERROR %d\n", line);
 			break;
 		default:
 			break;

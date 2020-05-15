@@ -2,7 +2,8 @@
  * Interfejs klasy przechowującej stan gry gamma zmodyfikowany na potrzeby
  * rozwoju projektu przez Piotra Prabuckiego
  *
- * @author Marcin Peczarski <marpe@mimuw.edu.pl>
+ * @author Marcin Peczarski <marpe@mimuw.edu.pl>,
+ *         Piotr Prabucki <pp418377@students.mimuw.edu.pl>
  * @copyright Uniwersytet Warszawski
  * @date 18.03.2020
  */
