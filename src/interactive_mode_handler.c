@@ -112,7 +112,6 @@ void move_cursor(
 ) {
 	if (boundary_down <= *cursos_pos + diff && *cursos_pos + diff < boundary_up) {
 		*cursos_pos += diff;
-		printf("moved the cursor boss\n");
 	}
 }
 
@@ -124,6 +123,9 @@ void move_cursor(
  * @param[in] gamma             : wskaznik na strukture przechowujaca stan gry
  * @param[in] player            : numer gracza, ktorego tura sie skonczyla
  * @param[in] max_player_number : liczba graczy w grze @p gamma
+ * 
+ * @return Numer gracza kolejnego gracza, jesli jakikolwiek z nich moze jeszcze
+ * wykonac ruch lub -1 w przeciwnym wypadku.
  */
 long long get_next_player(
 	gamma_t *gamma,
@@ -133,7 +135,7 @@ long long get_next_player(
 	long long next_player = player + 1;
 
 	while (next_player != player) {
-		if (next_player == max_player_number) {
+		if (next_player > max_player_number) {
 			next_player = 1;
 		}
 		if (
@@ -142,6 +144,7 @@ long long get_next_player(
 		) {
 			return next_player;
 		}
+		next_player++;
 	}
 
 	return -1;
@@ -167,13 +170,21 @@ void run_interactive_mode(
 	struct termios new_kbd_mode;
 	struct termios g_old_kbd_mode;
 
-	tcgetattr(0, &g_old_kbd_mode);
+	bool operation_failed = tcgetattr(0, &g_old_kbd_mode);
+	if (operation_failed) {
+		exit(1);
+	}
+
 	memcpy(&new_kbd_mode, &g_old_kbd_mode, sizeof (struct termios));
 
 	new_kbd_mode.c_lflag &= ~(ICANON | ECHO);
 	new_kbd_mode.c_cc[VTIME] = 0;
 	new_kbd_mode.c_cc[VMIN] = 1;
-	tcsetattr(0, TCSANOW, &new_kbd_mode);
+
+	operation_failed = tcsetattr(0, TCSANOW, &new_kbd_mode);
+	if (operation_failed) {
+		exit(1);
+	}
 
 	int cell_size = get_cell_size(max_player_number) + 1;
 	long long cursor_pos_x = 0, cursor_pos_y = 1;
@@ -239,6 +250,7 @@ void run_interactive_mode(
 					if (player == -1) {
 						clear_screen();
 						tcsetattr(0, TCSANOW, &g_old_kbd_mode);
+						return;
 					}
 				}
 				break;
@@ -256,6 +268,7 @@ void run_interactive_mode(
 					if (player == -1) {
 						clear_screen();
 						tcsetattr(0, TCSANOW, &g_old_kbd_mode);
+						return;
 					}
 				}
 				break;
