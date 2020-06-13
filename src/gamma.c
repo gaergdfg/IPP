@@ -689,11 +689,11 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
 
 	for (uint32_t y = 0; y < g->field_height; y++) {
 		for (uint32_t x = 0; x < g->field_width; x++) {
-			if (gamma_golden_move(g, player, x, y)) {
-				uint32_t field_owner = *get_arr_32(g->field, x, y);
-				bool field_owner_gamma_move =
-					g->players[field_owner - 1]->used_golden_move;
+			uint32_t field_owner = *get_arr_32(g->field, x, y);
+			bool field_owner_gamma_move =
+				g->players[field_owner - 1]->used_golden_move;
 
+			if (gamma_golden_move(g, player, x, y)) {
 				g->players[field_owner - 1]->used_golden_move = false;
 				gamma_golden_move(g, field_owner, x, y);
 				g->players[field_owner - 1]->used_golden_move =
