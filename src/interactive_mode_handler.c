@@ -331,7 +331,6 @@ int validate_terminal_size(gamma_t *gamma) {
 }
 
 
-
 /**
  * @brief Odpala tryb interaktywny gry @p gamma.
  * Zmienia ustawienia wyswietlania terminala, by odpowiednio wypisywac stan gry.
