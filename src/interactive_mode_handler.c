@@ -37,6 +37,8 @@ int get_cell_size(uint32_t number) {
  * @brief Wyswietla plansze gry.
  * Wypisuje stan gry na standardowe wyjscie.
  * Podswietla komorke ( @p cursor_pos_x, @p cursor_pos_y ).
+ * Podswietla rowniez na inny kolor pozostale pola zajete przez gracza
+ * @p player.
  * 
  * @param[in] gamma         : wskaznik na strukture przechowujaca informacje o
  *                            grze
@@ -58,6 +60,9 @@ void print_board(
 			if (y == gamma->field_height - cursor_pos_y && x == cursor_pos_x) {
 				printf("\033[46;1m");
 			}
+			else if (*get_arr_32(gamma->field, x, y) == player) {
+				printf("\033[44;1m");
+			}
 
 			// printing the cell's value or '.' if its not occupied
 			if (*get_arr_32(gamma->field, x, y) > 0) {
@@ -68,7 +73,11 @@ void print_board(
 			}
 
 			// ending the highlighting for the cursor
-			if (y == gamma->field_height - cursor_pos_y && x == cursor_pos_x) {
+			if (
+				(y == gamma->field_height - cursor_pos_y &&
+					x == cursor_pos_x) ||
+				*get_arr_32(gamma->field, x, y) == player
+			) {
 				printf("\033[0m");
 			}
 
@@ -81,15 +90,16 @@ void print_board(
 	}
 	
 	printf(
-		"PLAYER %d %lu %lu", 
+		"PLAYER: %d\nTAKEN FIELDS: %lu\nAVAILABLE FIELDS: %lu\n", 
 		player,
 		gamma_busy_fields(gamma, player),
 		gamma_free_fields(gamma, player)
 	);
-	if (!gamma->players[player - 1]->used_golden_move) {
-		printf(" G");
+	printf("GOLDEN MOVE: ");
+	if (gamma->players[player - 1]->used_golden_move) {
+		printf("UN");
 	}
-	printf("\n");
+	printf("AVAILABLE\n");
 }
 
 

@@ -670,15 +670,12 @@ uint64_t gamma_free_fields(gamma_t *g, uint32_t player) {
 
 
 /** @brief Sprawdza, czy gracz może wykonać złoty ruch.
- * Sprawdza, czy gracz @p player jeszcze nie wykonał w tej rozgrywce złotego
- * ruchu i jest przynajmniej jedno pole zajęte przez innego gracza.
  * 
  * @param[in,out] g   : wskaźnik na strukturę przechowującą stan gry,
  * @param[in] player  : numer gracza, liczba dodatnia niewiększa od wartości
  *                      @p players z funkcji @ref gamma_new.
  * 
- * @return Wartość @p true, jeśli gracz jeszcze nie wykonał w tej rozgrywce
- * złotego ruchu i jest przynajmniej jedno pole zajęte przez innego gracza,
+ * @return Wartość @p true, jeśli gracz może wykonać zloty ruch,
  * a @p false w przeciwnym przypadku.
  */
 bool gamma_golden_possible(gamma_t *g, uint32_t player) {
@@ -689,10 +686,23 @@ bool gamma_golden_possible(gamma_t *g, uint32_t player) {
 	if (g->players[player - 1]->used_golden_move) {
 		return false;
 	}
-	
-	for (uint32_t i = 0; i < g->player_count; i++) {
-		if (i != player - 1 && g->players[i]->taken_fields > 0) {
-			return true;
+
+	for (uint32_t y = 0; y < g->field_height; y++) {
+		for (uint32_t x = 0; x < g->field_width; x++) {
+			if (gamma_golden_move(g, player, x, y)) {
+				uint32_t field_owner = *get_arr_32(g->field, x, y);
+				bool field_owner_gamma_move =
+					g->players[field_owner - 1]->used_golden_move;
+
+				g->players[field_owner - 1]->used_golden_move = false;
+				gamma_golden_move(g, field_owner, x, y);
+				g->players[field_owner - 1]->used_golden_move =
+					field_owner_gamma_move;
+
+				g->players[player - 1]->used_golden_move = false;
+
+				return true;
+			}
 		}
 	}
 

@@ -19,6 +19,26 @@ set(CMAKE_C_FLAGS "-std=c11 -Wall -Wextra")
 # set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 # set(CMAKE_C_FLAGS_DEBUG "-g")
 
+# Wskazujemy pliki zrodlowe dla wersji, ktora testuje silnik gry
+set(TEST_SOURCE_FILES
+    src/array_util.c
+    src/array_util.h
+    src/command_handler.c
+    src/command_handler.h
+    src/gamma_test.c
+    src/gamma.c
+    src/gamma.h
+    src/interactive_mode_handler.c
+    src/interactive_mode_handler.h
+    src/memory_util.c
+    src/memory_util.h
+    src/parser.c
+    src/parser.h)
+
+# Wskazujemy plik wykonywalny dla testów silnika.
+add_executable(test EXCLUDE_FROM_ALL ${TEST_SOURCE_FILES})
+set_target_properties(test PROPERTIES OUTPUT_NAME gamma_test)
+
 # Wskazujemy pliki źródłowe.
 set(SOURCE_FILES
     src/array_util.c
