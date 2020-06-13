@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <termios.h>
+#include <sys/ioctl.h>
 #include "gamma.h"
 #include "array_util.h"
 
@@ -309,9 +310,34 @@ void handle_interactive_input(
 
 
 /**
+ * @brief Sprawdza, czy terminal jest wystarczajaco duzy, by przeprowadzic
+ * gre @p gamma.
+ * 
+ * @param[in] gamma : wskaznik na strukture przechowujaca informacje o grze
+ * 
+ * @return Zwraca 1, gdy gra moze zostac przeprowadzona oraz 0 w przeciwnym
+ * wypadku.
+ */
+int validate_terminal_size(gamma_t *gamma) {
+	struct winsize info;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &info);
+
+	int cell_size = get_cell_size(gamma->player_count) + 1;
+
+	int game_width = cell_size * gamma->field_width - 1;
+	int game_height = gamma->field_height + 4;
+
+	return info.ws_col > game_width && info.ws_row > game_height;
+}
+
+
+
+/**
  * @brief Odpala tryb interaktywny gry @p gamma.
  * Zmienia ustawienia wyswietlania terminala, by odpowiednio wypisywac stan gry.
  * Przywraca te ustawienia przy wyjsciu z funkcji.
+ * Jesli rozmiar terminala jest za maly, by przeprowadzic zadana rozgrywke,
+ * konczy program z kodem 1.
  * 
  * @param[in, out] gamma        : wskaznik na wskaznik na strukture
  *                                przechowujaca stan gry
@@ -325,6 +351,11 @@ void run_interactive_mode(
 	long long boundary_y,
 	uint32_t max_player_number
 ) {
+	if (!validate_terminal_size(*gamma)) {
+		printf("Rozmiar terminala jest za maly, by przeprowadzic rozgrywke\n");
+		exit(1);
+	}
+
 	struct termios new_termios;
 	struct termios old_termios;
 
